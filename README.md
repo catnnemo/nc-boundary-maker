@@ -30,11 +30,20 @@ python merge_counties.py <input.geojson> <output.geojson> <counties.txt>
 ```
 Wayne
 Wilson
+Greene
+Lenoir
 Pitt
-# Eastern counties
 Edgecombe
 Martin
 Bertie
+Hertford
+Gates
+Washington
+Chowan
+Perquimans
+Pasquotank
+Camden
+Currituck
 ```
 
 ## Example
@@ -50,14 +59,6 @@ Geometry type: Polygon
 ```
 
 The output is a GeoJSON FeatureCollection with a single feature. If the selected counties are non-contiguous, the geometry will be a `MultiPolygon` rather than a `Polygon`.
-
-## Getting county GeoJSON
-
-A few free sources for US county boundary GeoJSON:
-
-- **NC OneMap** — [nconemap.com](https://www.nconemap.com) — official NC GIS data, used to build this tool
-- **US Census TIGER** — [census.gov](https://www.census.gov/geographies/mapping-files/time-series/geo/cartographic-boundary.html) — authoritative national source
-- **Eric Celeste** — [eric.clst.org/tech/usafips](https://eric.clst.org/tech/usafips) — pre-made GeoJSON, no conversion needed
 
 The script looks for the county name in the following GeoJSON property keys (in order): `County`, `county`, `NAME`, `name` — so it should work with files from any of these sources without modification.
 
