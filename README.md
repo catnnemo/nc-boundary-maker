@@ -1,6 +1,6 @@
 # merge_counties
 
-A small Python script that takes a GeoJSON file of county boundaries and merges a subset of counties into a single dissolved polygon.
+A small Python script that merges a subset of NC counties into a single dissolved polygon, using the included `nc_counties.geojson` boundary file.
 
 ## Requirements
 
@@ -14,14 +14,10 @@ pip install shapely
 ## Usage
 
 ```bash
-python merge_counties.py <input.geojson> <output.geojson> <counties.txt>
+python merge_counties.py counties.txt
 ```
 
-| Argument | Description |
-|---|---|
-| `input.geojson` | GeoJSON FeatureCollection of county boundaries |
-| `output.geojson` | Path to write the merged output |
-| `counties.txt` | Text file with one county name per line |
+The output is automatically named `output_YYYYMMDD_HHMMSS.geojson` and written to the current directory.
 
 ## County list format
 
@@ -49,18 +45,24 @@ Currituck
 ## Example
 
 ```bash
-python merge_counties.py nc_counties.geojson merged.geojson counties.txt
+python merge_counties.py counties.txt
 ```
 
 ```
 Found 16 counties: Bertie, Camden, Chowan, Currituck, Edgecombe, ...
-Output written to: merged.geojson
+Output written to: output_20240422_143201.geojson
 Geometry type: Polygon
 ```
 
 The output is a GeoJSON FeatureCollection with a single feature. If the selected counties are non-contiguous, the geometry will be a `MultiPolygon` rather than a `Polygon`.
 
-The script looks for the county name in the following GeoJSON property keys (in order): `County`, `county`, `NAME`, `name` — so it should work with files from any of these sources without modification.
+## Files
+
+| File | Description |
+|---|---|
+| `merge_counties.py` | The script |
+| `nc_counties.geojson` | NC county boundary source data (from [NC OneMap](https://www.nconemap.com)) |
+| `counties.txt` | Example county list |
 
 ## License
 
