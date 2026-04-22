@@ -1,6 +1,6 @@
-# merge_counties
+# nc-boundary-maker
 
-A small Python script that merges a subset of NC counties into a single dissolved polygon, using the included `nc_counties.geojson` boundary file.
+A small Python script that merges a subset of NC counties into a single dissolved polygon, using the included `nc_counties.geojson` boundary file. Made with Meshmapper admins in mind
 
 ## Requirements
 
