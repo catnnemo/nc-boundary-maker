@@ -334,8 +334,22 @@ function loadState(state) {
       }).addTo(map);
       loadedLayers.set(state.fips, layer);
       overlay.textContent = '';
+      fitToActiveStates();
     })
     .catch(err => { overlay.textContent = 'Error loading ' + state.name; setTimeout(() => overlay.textContent = '', 3000); });
+}
+
+function fitToActiveStates() {
+  if (loadedLayers.size === 0) {
+    map.fitBounds([[24.5, -125], [49.5, -66]]);
+    return;
+  }
+  let bounds = null;
+  loadedLayers.forEach(layer => {
+    const b = layer.getBounds();
+    bounds = bounds ? bounds.extend(b) : b;
+  });
+  if (bounds) map.fitBounds(bounds, { padding: [40, 40], maxZoom: 10 });
 }
 
 function unloadState(state) {
@@ -349,6 +363,7 @@ function unloadState(state) {
       if (key.endsWith('|' + state.name)) selected.delete(key);
     }
     updateUI();
+    fitToActiveStates();
   }
 }
 
