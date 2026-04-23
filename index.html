@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Boundary Maker Utility</title>
+<title>nc-boundary-maker</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
@@ -144,6 +144,7 @@
   <ul id="county-tags"></ul>
 </div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Turf.js/6.5.0/turf.min.js"></script>
 <script>
 const selected = new Set();
 const map = L.map('map', { zoomControl: true, attributionControl: false });
@@ -217,19 +218,15 @@ document.getElementById('clear-btn').addEventListener('click', () => {
 
 document.getElementById('download-btn').addEventListener('click', () => {
   const features = geojsonData.features.filter(f => selected.has(f.properties.County));
-  const allCoords = [];
-  features.forEach(f => {
-    if (f.geometry.type === 'Polygon') allCoords.push(f.geometry.coordinates);
-    else f.geometry.coordinates.forEach(c => allCoords.push(c));
-  });
-  const output = {
-    type: 'FeatureCollection',
-    features: [{
-      type: 'Feature',
-      geometry: { type: 'MultiPolygon', coordinates: allCoords },
-      properties: { counties: [...selected].sort().join(', ') }
-    }]
-  };
+
+  // Dissolve all selected counties into a single polygon using Turf.js union
+  let dissolved = features[0];
+  for (let i = 1; i < features.length; i++) {
+    dissolved = turf.union(dissolved, features[i]);
+  }
+  dissolved.properties = { counties: [...selected].sort().join(', ') };
+
+  const output = { type: 'FeatureCollection', features: [dissolved] };
   const blob = new Blob([JSON.stringify(output)], { type: 'application/geo+json' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
