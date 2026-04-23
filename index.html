@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>carolinas-boundary-maker</title>
+<title>US County Merger</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
@@ -12,12 +12,13 @@
   :root {
     --bg: #f0f7f3;
     --ink: #0f1f17;
-    --accent-nc: #30bf76;
-    --accent-nc-dark: #229957;
-    --accent-sc: #5ba4cf;
-    --accent-sc-dark: #3a7fb5;
     --panel: #f8fcfa;
     --border: #b0d9c2;
+    --sidebar-w: 220px;
+    --c0: #4db87a; --c0d: #2e8f55; --c0bg: rgba(77,184,122,0.15);
+    --c1: #5ba4cf; --c1d: #3a7fb5; --c1bg: rgba(91,164,207,0.15);
+    --c2: #e07070; --c2d: #b84444; --c2bg: rgba(224,112,112,0.15);
+    --c3: #9b7fd4; --c3d: #6f4fb5; --c3bg: rgba(155,127,212,0.15);
   }
   body {
     font-family: 'DM Mono', monospace;
@@ -29,7 +30,7 @@
     overflow: hidden;
   }
   header {
-    padding: 14px 24px;
+    padding: 12px 20px;
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -38,248 +39,380 @@
     z-index: 1000;
     flex-shrink: 0;
   }
-  .title-block h1 {
-    font-family: 'Playfair Display', serif;
-    font-size: 1.3rem;
-    color: var(--ink);
-  }
-  .title-block p {
-    font-size: 0.68rem;
-    color: #888;
-    margin-top: 2px;
-    letter-spacing: 0.05em;
-    text-transform: uppercase;
-  }
-  .controls { display: flex; align-items: center; gap: 12px; }
-  #selection-info { font-size: 0.75rem; color: #666; letter-spacing: 0.03em; }
-  #selection-info .nc { color: var(--accent-nc); font-weight: 500; }
-  #selection-info .sc { color: var(--accent-sc); font-weight: 500; }
+  .title-block h1 { font-family: 'Playfair Display', serif; font-size: 1.2rem; color: var(--ink); }
+  .title-block p { font-size: 0.65rem; color: #888; margin-top: 2px; letter-spacing: 0.05em; text-transform: uppercase; }
+  .controls { display: flex; align-items: center; gap: 10px; }
+  #selection-info { font-size: 0.72rem; color: #666; }
+  #selection-info span { font-weight: 500; color: var(--c0d); }
   button {
     font-family: 'DM Mono', monospace;
-    font-size: 0.75rem;
-    letter-spacing: 0.08em;
+    font-size: 0.72rem;
+    letter-spacing: 0.07em;
     text-transform: uppercase;
     cursor: pointer;
     border: 1.5px solid var(--border);
     background: var(--panel);
     color: var(--ink);
-    padding: 8px 16px;
+    padding: 7px 14px;
     transition: all 0.15s ease;
   }
   button:hover { border-color: var(--ink); background: #e4f4ec; }
-  #download-btn { background: var(--accent-nc); color: white; border-color: var(--accent-nc); }
-  #download-btn:hover { background: var(--accent-nc-dark); border-color: var(--accent-nc-dark); }
+  #download-btn { background: var(--c0d); color: white; border-color: var(--c0d); }
+  #download-btn:hover { background: #1f6e3a; border-color: #1f6e3a; }
   #download-btn:disabled { background: #ccc; border-color: #ccc; cursor: not-allowed; }
-  #map { flex: 1; width: 100%; }
+
+  .main { display: flex; flex: 1; overflow: hidden; }
+
+  /* Sidebar */
+  #sidebar {
+    width: var(--sidebar-w);
+    flex-shrink: 0;
+    background: var(--panel);
+    border-right: 1.5px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  #sidebar-header {
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border);
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: #888;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-shrink: 0;
+  }
+  #sidebar-header button {
+    font-size: 0.6rem;
+    padding: 3px 8px;
+    letter-spacing: 0.05em;
+  }
+  #state-list {
+    overflow-y: auto;
+    flex: 1;
+    padding: 6px 0;
+  }
+  .state-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 5px 14px;
+    cursor: pointer;
+    transition: background 0.1s;
+    font-size: 0.72rem;
+  }
+  .state-item:hover { background: #e8f4ee; }
+  .state-item input[type=checkbox] { cursor: pointer; accent-color: var(--c0d); }
+  .color-dot {
+    width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0;
+  }
+  .dot-0 { background: var(--c0); }
+  .dot-1 { background: var(--c1); }
+  .dot-2 { background: var(--c2); }
+  .dot-3 { background: var(--c3); }
+
+  #map-wrap { flex: 1; position: relative; }
+  #map { width: 100%; height: 100%; }
+
   .county-tooltip {
     font-family: 'DM Mono', monospace;
-    font-size: 0.72rem;
+    font-size: 0.7rem;
     background: var(--ink);
     color: white;
     border: none;
     border-radius: 0;
     padding: 4px 8px;
-    letter-spacing: 0.05em;
+    letter-spacing: 0.04em;
     text-transform: uppercase;
     box-shadow: 2px 2px 0 rgba(0,0,0,0.2);
   }
   .leaflet-tooltip-top.county-tooltip::before { border-top-color: var(--ink); }
   .leaflet-container { outline: none; }
   .leaflet-interactive:focus { outline: none; }
+
   #selected-list {
     position: absolute;
-    bottom: 24px;
-    left: 24px;
+    bottom: 20px;
+    left: 20px;
     z-index: 1000;
     background: var(--panel);
     border: 1.5px solid var(--border);
-    padding: 12px 16px;
-    max-width: 340px;
+    padding: 10px 14px;
+    max-width: 320px;
+    max-height: 180px;
+    overflow-y: auto;
     display: none;
   }
-  #selected-list h3 {
-    font-size: 0.65rem;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    color: #888;
-    margin-bottom: 8px;
-  }
-  #selected-list ul {
-    list-style: none;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 4px;
-  }
-  #selected-list ul li {
-    font-size: 0.7rem;
-    padding: 2px 7px;
-  }
-  #selected-list ul li.nc {
-    background: rgba(48,191,118,0.1);
-    border: 1px solid var(--accent-nc);
-    color: var(--accent-nc);
-  }
-  #selected-list ul li.sc {
-    background: rgba(91,164,207,0.1);
-    border: 1px solid var(--accent-sc);
-    color: var(--accent-sc);
-  }
-  #loading {
+  #selected-list h3 { font-size: 0.62rem; text-transform: uppercase; letter-spacing: 0.1em; color: #888; margin-bottom: 7px; }
+  #selected-list ul { list-style: none; display: flex; flex-wrap: wrap; gap: 4px; }
+  #selected-list ul li { font-size: 0.67rem; padding: 2px 6px; border: 1px solid; }
+  #selected-list ul li.c0 { background: var(--c0bg); border-color: var(--c0); color: var(--c0d); }
+  #selected-list ul li.c1 { background: var(--c1bg); border-color: var(--c1); color: var(--c1d); }
+  #selected-list ul li.c2 { background: var(--c2bg); border-color: var(--c2); color: var(--c2d); }
+  #selected-list ul li.c3 { background: var(--c3bg); border-color: var(--c3); color: var(--c3d); }
+
+  #loading-overlay {
     position: absolute;
-    top: 50%;
-    left: 50%;
+    top: 50%; left: 50%;
     transform: translate(-50%, -50%);
     font-size: 0.8rem;
     letter-spacing: 0.1em;
     text-transform: uppercase;
     color: #888;
     z-index: 2000;
+    pointer-events: none;
   }
-  #legend {
-    position: absolute;
-    bottom: 24px;
-    right: 24px;
-    z-index: 1000;
-    background: var(--panel);
-    border: 1.5px solid var(--border);
-    padding: 10px 14px;
-    font-size: 0.68rem;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-  }
-  #legend div { display: flex; align-items: center; gap: 8px; margin-bottom: 5px; }
-  #legend div:last-child { margin-bottom: 0; }
-  .swatch { width: 14px; height: 14px; border: 1.5px solid; }
-  .swatch.nc { background: rgba(48,191,118,0.35); border-color: #229957; }
-  .swatch.sc { background: rgba(91,164,207,0.35); border-color: #3a7fb5; }
 </style>
 </head>
 <body>
 <header>
   <div class="title-block">
-    <h1>carolinas-boundary-maker</h1>
-    <p>Click counties to select &mdash; download as GeoJSON</p>
+    <h1>US County Merger</h1>
+    <p>Select states &rarr; click counties &rarr; download GeoJSON</p>
   </div>
   <div class="controls">
-    <div id="selection-info">
-      <span class="nc" id="nc-count">0</span> NC &nbsp;
-      <span class="sc" id="sc-count">0</span> SC
-    </div>
+    <div id="selection-info"><span id="count">0</span> counties selected</div>
     <button id="clear-btn">Clear</button>
     <button id="download-btn" disabled>Download GeoJSON</button>
   </div>
 </header>
-<div id="map"><div id="loading">Loading counties...</div></div>
-<div id="selected-list">
-  <h3>Selected Counties</h3>
-  <ul id="county-tags"></ul>
+
+<div class="main">
+  <div id="sidebar">
+    <div id="sidebar-header">
+      States
+      <button id="clear-states-btn">Clear All</button>
+    </div>
+    <div id="state-list"></div>
+  </div>
+  <div id="map-wrap">
+    <div id="map"></div>
+    <div id="loading-overlay"></div>
+    <div id="selected-list">
+      <h3>Selected Counties</h3>
+      <ul id="county-tags"></ul>
+    </div>
+  </div>
 </div>
-<div id="legend">
-  <div><span class="swatch nc"></span> North Carolina</div>
-  <div><span class="swatch sc"></span> South Carolina</div>
-</div>
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Turf.js/6.5.0/turf.min.js"></script>
 <script>
-const selected = new Map(); // name -> 'NC' | 'SC'
+const STATES = [
+  {name:'Alabama',fips:'01',color:0,file:'alabama'},
+  {name:'Arizona',fips:'04',color:1,file:'arizona'},
+  {name:'Arkansas',fips:'05',color:1,file:'arkansas'},
+  {name:'California',fips:'06',color:0,file:'california'},
+  {name:'Colorado',fips:'08',color:0,file:'colorado'},
+  {name:'Connecticut',fips:'09',color:2,file:'connecticut'},
+  {name:'Delaware',fips:'10',color:3,file:'delaware'},
+  {name:'Florida',fips:'12',color:2,file:'florida'},
+  {name:'Georgia',fips:'13',color:1,file:'georgia'},
+  {name:'Idaho',fips:'16',color:0,file:'idaho'},
+  {name:'Illinois',fips:'17',color:3,file:'illinois'},
+  {name:'Indiana',fips:'18',color:2,file:'indiana'},
+  {name:'Iowa',fips:'19',color:2,file:'iowa'},
+  {name:'Kansas',fips:'20',color:1,file:'kansas'},
+  {name:'Kentucky',fips:'21',color:1,file:'kentucky'},
+  {name:'Louisiana',fips:'22',color:2,file:'louisiana'},
+  {name:'Maine',fips:'23',color:1,file:'maine'},
+  {name:'Maryland',fips:'24',color:0,file:'maryland'},
+  {name:'Massachusetts',fips:'25',color:1,file:'massachusetts'},
+  {name:'Michigan',fips:'26',color:3,file:'michigan'},
+  {name:'Minnesota',fips:'27',color:0,file:'minnesota'},
+  {name:'Mississippi',fips:'28',color:3,file:'mississippi'},
+  {name:'Missouri',fips:'29',color:0,file:'missouri'},
+  {name:'Montana',fips:'30',color:3,file:'montana'},
+  {name:'Nebraska',fips:'31',color:3,file:'nebraska'},
+  {name:'Nevada',fips:'32',color:2,file:'nevada'},
+  {name:'New Hampshire',fips:'33',color:0,file:'new_hampshire'},
+  {name:'New Jersey',fips:'34',color:2,file:'new_jersey'},
+  {name:'New Mexico',fips:'35',color:3,file:'new_mexico'},
+  {name:'New York',fips:'36',color:0,file:'new_york'},
+  {name:'North Carolina',fips:'37',color:0,file:'north_carolina'},
+  {name:'North Dakota',fips:'38',color:2,file:'north_dakota'},
+  {name:'Ohio',fips:'39',color:0,file:'ohio'},
+  {name:'Oklahoma',fips:'40',color:2,file:'oklahoma'},
+  {name:'Oregon',fips:'41',color:1,file:'oregon'},
+  {name:'Pennsylvania',fips:'42',color:1,file:'pennsylvania'},
+  {name:'Rhode Island',fips:'44',color:0,file:'rhode_island'},
+  {name:'South Carolina',fips:'45',color:2,file:'south_carolina'},
+  {name:'South Dakota',fips:'46',color:1,file:'south_dakota'},
+  {name:'Tennessee',fips:'47',color:2,file:'tennessee'},
+  {name:'Texas',fips:'48',color:0,file:'texas'},
+  {name:'Utah',fips:'49',color:2,file:'utah'},
+  {name:'Vermont',fips:'50',color:1,file:'vermont'},
+  {name:'Virginia',fips:'51',color:2,file:'virginia'},
+  {name:'Washington',fips:'53',color:2,file:'washington'},
+  {name:'West Virginia',fips:'54',color:3,file:'west_virginia'},
+  {name:'Wisconsin',fips:'55',color:1,file:'wisconsin'},
+  {name:'Wyoming',fips:'56',color:2,file:'wyoming'}
+];
+
+const COLORS = [
+  {fill:'#4db87a', stroke:'#2e8f55', hover:'#7dd4a0', selFill:'rgba(77,184,122,0.45)'},
+  {fill:'#5ba4cf', stroke:'#3a7fb5', hover:'#8cbfde', selFill:'rgba(91,164,207,0.45)'},
+  {fill:'#e07070', stroke:'#b84444', hover:'#eda0a0', selFill:'rgba(224,112,112,0.45)'},
+  {fill:'#9b7fd4', stroke:'#6f4fb5', hover:'#bba8e4', selFill:'rgba(155,127,212,0.45)'},
+];
+
+const DEFAULT_FILL = {fill:'#d0d8d4', stroke:'#9ab0a8'};
+
+const selected = new Map(); // key: "County|StateName" -> color index
+const loadedLayers = new Map(); // fips -> L.geoJSON layer
+const loadedData = new Map();   // fips -> geojson data
+const activeStates = new Set();
 
 const map = L.map('map', { zoomControl: true, attributionControl: false });
-map.fitBounds([[32.0, -84.4], [36.6, -75.3]]);
+map.fitBounds([[24.5, -125], [49.5, -66]]);
 
-function getStyle(feature, state) {
-  const sel = selected.has(feature.properties.County + '|' + state);
-  if (state === 'NC') return {
-    fillColor: sel ? '#30bf76' : '#c2ddd0',
-    fillOpacity: sel ? 0.45 : 0.3,
-    color: sel ? '#229957' : '#7aaa90',
-    weight: sel ? 2 : 1,
-  };
+function getStyle(feature, color, isSelected) {
+  const c = COLORS[color];
   return {
-    fillColor: sel ? '#5ba4cf' : '#c5dff0',
-    fillOpacity: sel ? 0.45 : 0.3,
-    color: sel ? '#3a7fb5' : '#7aaac8',
-    weight: sel ? 2 : 1,
+    fillColor: isSelected ? c.fill : DEFAULT_FILL.fill,
+    fillOpacity: isSelected ? 0.5 : 0.3,
+    color: isSelected ? c.stroke : DEFAULT_FILL.stroke,
+    weight: isSelected ? 2 : 0.8,
   };
 }
 
 function updateUI() {
-  const ncCount = [...selected.values()].filter(s => s === 'NC').length;
-  const scCount = [...selected.values()].filter(s => s === 'SC').length;
-  const total = ncCount + scCount;
-  document.getElementById('nc-count').textContent = ncCount;
-  document.getElementById('sc-count').textContent = scCount;
-  document.getElementById('download-btn').disabled = total === 0;
+  const count = selected.size;
+  document.getElementById('count').textContent = count;
+  document.getElementById('download-btn').disabled = count === 0;
   const list = document.getElementById('selected-list');
-  list.style.display = total > 0 ? 'block' : 'none';
+  list.style.display = count > 0 ? 'block' : 'none';
   document.getElementById('county-tags').innerHTML =
-    [...selected.entries()].sort((a,b) => a[0].localeCompare(b[0])).map(([key, state]) => {
-      const name = key.split('|')[0];
-      return '<li class="' + state.toLowerCase() + '">' + name + ' <small>(' + state + ')</small></li>';
+    [...selected.entries()].sort((a,b)=>a[0].localeCompare(b[0])).map(([key, color]) => {
+      const [county, state] = key.split('|');
+      return `<li class="c${color}">${county} <small style="opacity:0.7">${state}</small></li>`;
     }).join('');
 }
 
-let ncData, scData;
-let ncLayer, scLayer;
+function loadState(state) {
+  if (loadedLayers.has(state.fips)) return;
 
-function initLayer(data, state) {
-  return L.geoJSON(data, {
-    style: f => getStyle(f, state),
-    onEachFeature: (feature, layer) => {
-      const name = feature.properties.County;
-      const key = name + '|' + state;
-      layer.bindTooltip(name + ' <small>(' + state + ')</small>', {
-        className: 'county-tooltip', sticky: true, offset: [10, 0]
-      });
-      layer.on('click', () => {
-        selected.has(key) ? selected.delete(key) : selected.set(key, state);
-        layer.setStyle(getStyle(feature, state));
-        updateUI();
-      });
-      layer.on('mouseover', () => {
-        if (!selected.has(key)) {
-          layer.setStyle({ fillOpacity: 0.55, fillColor: state === 'NC' ? '#9dcbb5' : '#8cbfde' });
+  const overlay = document.getElementById('loading-overlay');
+  overlay.textContent = 'Loading ' + state.name + '...';
+
+  fetch(`states/${state.file}.geojson`)
+    .then(r => { if (!r.ok) throw new Error(r.statusText); return r.json(); })
+    .then(data => {
+      loadedData.set(state.fips, data);
+      const layer = L.geoJSON(data, {
+        style: f => {
+          const key = f.properties.County + '|' + state.name;
+          return getStyle(f, state.color, selected.has(key));
+        },
+        onEachFeature: (feature, layer) => {
+          const county = feature.properties.County;
+          const key = county + '|' + state.name;
+          layer.bindTooltip(`${county}, ${state.name}`, {
+            className: 'county-tooltip', sticky: true, offset: [10, 0]
+          });
+          layer.on('click', () => {
+            if (selected.has(key)) {
+              selected.delete(key);
+            } else {
+              selected.set(key, state.color);
+            }
+            layer.setStyle(getStyle(feature, state.color, selected.has(key)));
+            updateUI();
+          });
+          layer.on('mouseover', () => {
+            if (!selected.has(key)) {
+              layer.setStyle({ fillOpacity: 0.5, fillColor: COLORS[state.color].hover });
+            }
+          });
+          layer.on('mouseout', () => {
+            layer.setStyle(getStyle(feature, state.color, selected.has(key)));
+          });
         }
-      });
-      layer.on('mouseout', () => layer.setStyle(getStyle(feature, state)));
+      }).addTo(map);
+      loadedLayers.set(state.fips, layer);
+      overlay.textContent = '';
+    })
+    .catch(err => { overlay.textContent = 'Error loading ' + state.name; setTimeout(() => overlay.textContent = '', 3000); });
+}
+
+function unloadState(state) {
+  const layer = loadedLayers.get(state.fips);
+  if (layer) {
+    map.removeLayer(layer);
+    loadedLayers.delete(state.fips);
+    loadedData.delete(state.fips);
+    // Remove any selected counties from this state
+    for (const key of [...selected.keys()]) {
+      if (key.endsWith('|' + state.name)) selected.delete(key);
     }
-  }).addTo(map);
+    updateUI();
+  }
 }
 
-let loaded = 0;
-function onLoaded() {
-  loaded++;
-  if (loaded === 2) document.getElementById('loading').remove();
-}
+// Build sidebar
+const stateList = document.getElementById('state-list');
+STATES.forEach(state => {
+  const item = document.createElement('div');
+  item.className = 'state-item';
+  item.innerHTML = `
+    <input type="checkbox" id="cb-${state.fips}">
+    <span class="color-dot dot-${state.color}"></span>
+    <label for="cb-${state.fips}" style="cursor:pointer;flex:1">${state.name}</label>
+  `;
+  const cb = item.querySelector('input');
+  cb.addEventListener('change', () => {
+    if (cb.checked) {
+      activeStates.add(state.fips);
+      loadState(state);
+    } else {
+      activeStates.delete(state.fips);
+      unloadState(state);
+    }
+  });
+  stateList.appendChild(item);
+});
 
-fetch('nc_counties.geojson')
-  .then(r => { if (!r.ok) throw new Error('Failed to load nc_counties.geojson'); return r.json(); })
-  .then(data => { ncData = data; ncLayer = initLayer(data, 'NC'); onLoaded(); })
-  .catch(err => { document.getElementById('loading').textContent = 'Error: ' + err.message; });
-
-fetch('sc_counties.geojson')
-  .then(r => { if (!r.ok) throw new Error('Failed to load sc_counties.geojson'); return r.json(); })
-  .then(data => { scData = data; scLayer = initLayer(data, 'SC'); onLoaded(); })
-  .catch(err => { document.getElementById('loading').textContent = 'Error: ' + err.message; });
+document.getElementById('clear-states-btn').addEventListener('click', () => {
+  document.querySelectorAll('#state-list input[type=checkbox]').forEach(cb => {
+    if (cb.checked) { cb.checked = false; cb.dispatchEvent(new Event('change')); }
+  });
+});
 
 document.getElementById('clear-btn').addEventListener('click', () => {
   selected.clear();
-  if (ncLayer) ncLayer.eachLayer(l => l.setStyle(getStyle(l.feature, 'NC')));
-  if (scLayer) scLayer.eachLayer(l => l.setStyle(getStyle(l.feature, 'SC')));
+  loadedLayers.forEach((layer, fips) => {
+    const state = STATES.find(s => s.fips === fips);
+    layer.eachLayer(l => l.setStyle(getStyle(l.feature, state.color, false)));
+  });
   updateUI();
 });
 
 document.getElementById('download-btn').addEventListener('click', () => {
-  const allData = [
-    ...(ncData ? ncData.features.filter(f => selected.has(f.properties.County + '|NC')) : []),
-    ...(scData ? scData.features.filter(f => selected.has(f.properties.County + '|SC')) : [])
-  ];
+  const features = [];
+  selected.forEach((color, key) => {
+    const [county, stateName] = key.split('|');
+    const state = STATES.find(s => s.name === stateName);
+    if (!state) return;
+    const data = loadedData.get(state.fips);
+    if (!data) return;
+    const feat = data.features.find(f => f.properties.County === county);
+    if (feat) features.push(feat);
+  });
 
-  let dissolved = allData[0];
-  for (let i = 1; i < allData.length; i++) {
-    dissolved = turf.union(dissolved, allData[i]);
+  if (features.length === 0) return;
+
+  let dissolved = features[0];
+  for (let i = 1; i < features.length; i++) {
+    try { dissolved = turf.union(dissolved, features[i]); }
+    catch(e) { console.warn('Union failed for feature', i, e); }
   }
   dissolved.properties = {
-    counties: [...selected.entries()].sort().map(([k,s]) => k.split('|')[0] + ' (' + s + ')').join(', ')
+    counties: [...selected.keys()].sort().map(k => {
+      const [c, s] = k.split('|'); return `${c} (${s})`;
+    }).join(', ')
   };
 
   const output = { type: 'FeatureCollection', features: [dissolved] };
