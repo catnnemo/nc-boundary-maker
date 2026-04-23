@@ -60,6 +60,7 @@
   #download-btn { background: var(--c0d); color: white; border-color: var(--c0d); }
   #download-btn:hover { background: #1f6e3a; border-color: #1f6e3a; }
   #download-btn:disabled { background: #ccc; border-color: #ccc; cursor: not-allowed; }
+  #map-toggle-btn.active { background: var(--c0d); color: white; border-color: var(--c0d); }
 
   .main { display: flex; flex: 1; overflow: hidden; }
 
@@ -175,6 +176,7 @@
   </div>
   <div class="controls">
     <div id="selection-info"><span id="count">0</span> counties selected</div>
+    <button id="map-toggle-btn">Map Off</button>
     <button id="clear-btn">Clear</button>
     <button id="download-btn" disabled>Download GeoJSON</button>
   </div>
@@ -268,6 +270,27 @@ const activeStates = new Set();
 
 const map = L.map('map', { zoomControl: true, attributionControl: false });
 map.fitBounds([[24.5, -125], [49.5, -66]]);
+
+const osmLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  maxZoom: 19,
+  opacity: 0.6
+});
+
+let osmVisible = false;
+document.getElementById('map-toggle-btn').addEventListener('click', () => {
+  osmVisible = !osmVisible;
+  const btn = document.getElementById('map-toggle-btn');
+  if (osmVisible) {
+    osmLayer.addTo(map);
+    osmLayer.bringToBack();
+    btn.textContent = 'Map On';
+    btn.classList.add('active');
+  } else {
+    map.removeLayer(osmLayer);
+    btn.textContent = 'Map Off';
+    btn.classList.remove('active');
+  }
+});
 
 function getStyle(feature, color, isSelected) {
   const c = COLORS[color];
