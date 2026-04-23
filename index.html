@@ -3,18 +3,18 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>NC County Boundary Utility</title>
+<title>Boundary Maker Utility</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   :root {
-    --bg: #f5f0e8;
-    --ink: #1a1a1a;
+    --bg: #f0f7f3;
+    --ink: #0f1f17;
     --accent: #30bf76;
-    --panel: #fffdf8;
-    --border: #c8bfae;
+    --panel: #f8fcfa;
+    --border: #b0d9c2;
   }
   body {
     font-family: 'DM Mono', monospace;
@@ -62,9 +62,9 @@
     padding: 8px 16px;
     transition: all 0.15s ease;
   }
-  button:hover { border-color: var(--ink); background: #f0ebe0; }
+  button:hover { border-color: var(--ink); background: #e4f4ec; }
   #download-btn { background: var(--accent); color: white; border-color: var(--accent); }
-  #download-btn:hover { background: #a93226; border-color: #a93226; }
+  #download-btn:hover { background: #229957; border-color: #229957; }
   #download-btn:disabled { background: #ccc; border-color: #ccc; cursor: not-allowed; }
   #map { flex: 1; width: 100%; }
   .county-tooltip {
@@ -108,7 +108,7 @@
   }
   #selected-list ul li {
     font-size: 0.7rem;
-    background: rgba(192,57,43,0.1);
+    background: rgba(48,191,118,0.1);
     border: 1px solid var(--accent);
     color: var(--accent);
     padding: 2px 7px;
@@ -152,9 +152,9 @@ map.fitBounds([[33.7, -84.4], [36.6, -75.3]]);
 function getStyle(feature) {
   const sel = selected.has(feature.properties.County);
   return {
-    fillColor: sel ? '#c0392b' : '#d2c8b9',
+    fillColor: sel ? '#30bf76' : '#c2ddd0',
     fillOpacity: sel ? 0.45 : 0.3,
-    color: sel ? '#c0392b' : '#8a7e6e',
+    color: sel ? '#229957' : '#7aaa90',
     weight: sel ? 2 : 1,
   };
 }
@@ -187,7 +187,7 @@ function initMap(data) {
     });
 
     layer.on('mouseover', function() {
-      if (!selected.has(name)) layer.setStyle({ fillOpacity: 0.55, fillColor: '#a89880' });
+      if (!selected.has(name)) layer.setStyle({ fillOpacity: 0.55, fillColor: '#9dcbb5' });
     });
 
     layer.on('mouseout', function() {
