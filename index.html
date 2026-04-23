@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>nc-boundary-maker</title>
+<title>carolinas-boundary-maker</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
@@ -12,7 +12,10 @@
   :root {
     --bg: #f0f7f3;
     --ink: #0f1f17;
-    --accent: #30bf76;
+    --accent-nc: #30bf76;
+    --accent-nc-dark: #229957;
+    --accent-sc: #5ba4cf;
+    --accent-sc-dark: #3a7fb5;
     --panel: #f8fcfa;
     --border: #b0d9c2;
   }
@@ -49,7 +52,8 @@
   }
   .controls { display: flex; align-items: center; gap: 12px; }
   #selection-info { font-size: 0.75rem; color: #666; letter-spacing: 0.03em; }
-  #selection-info span { color: var(--accent); font-weight: 500; }
+  #selection-info .nc { color: var(--accent-nc); font-weight: 500; }
+  #selection-info .sc { color: var(--accent-sc); font-weight: 500; }
   button {
     font-family: 'DM Mono', monospace;
     font-size: 0.75rem;
@@ -63,8 +67,8 @@
     transition: all 0.15s ease;
   }
   button:hover { border-color: var(--ink); background: #e4f4ec; }
-  #download-btn { background: var(--accent); color: white; border-color: var(--accent); }
-  #download-btn:hover { background: #229957; border-color: #229957; }
+  #download-btn { background: var(--accent-nc); color: white; border-color: var(--accent-nc); }
+  #download-btn:hover { background: var(--accent-nc-dark); border-color: var(--accent-nc-dark); }
   #download-btn:disabled { background: #ccc; border-color: #ccc; cursor: not-allowed; }
   #map { flex: 1; width: 100%; }
   .county-tooltip {
@@ -90,7 +94,7 @@
     background: var(--panel);
     border: 1.5px solid var(--border);
     padding: 12px 16px;
-    max-width: 320px;
+    max-width: 340px;
     display: none;
   }
   #selected-list h3 {
@@ -108,10 +112,17 @@
   }
   #selected-list ul li {
     font-size: 0.7rem;
-    background: rgba(48,191,118,0.1);
-    border: 1px solid var(--accent);
-    color: var(--accent);
     padding: 2px 7px;
+  }
+  #selected-list ul li.nc {
+    background: rgba(48,191,118,0.1);
+    border: 1px solid var(--accent-nc);
+    color: var(--accent-nc);
+  }
+  #selected-list ul li.sc {
+    background: rgba(91,164,207,0.1);
+    border: 1px solid var(--accent-sc);
+    color: var(--accent-sc);
   }
   #loading {
     position: absolute;
@@ -124,16 +135,36 @@
     color: #888;
     z-index: 2000;
   }
+  #legend {
+    position: absolute;
+    bottom: 24px;
+    right: 24px;
+    z-index: 1000;
+    background: var(--panel);
+    border: 1.5px solid var(--border);
+    padding: 10px 14px;
+    font-size: 0.68rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+  #legend div { display: flex; align-items: center; gap: 8px; margin-bottom: 5px; }
+  #legend div:last-child { margin-bottom: 0; }
+  .swatch { width: 14px; height: 14px; border: 1.5px solid; }
+  .swatch.nc { background: rgba(48,191,118,0.35); border-color: #229957; }
+  .swatch.sc { background: rgba(91,164,207,0.35); border-color: #3a7fb5; }
 </style>
 </head>
 <body>
 <header>
   <div class="title-block">
-    <h1>nc-boundary-maker</h1>
+    <h1>carolinas-boundary-maker</h1>
     <p>Click counties to select &mdash; download as GeoJSON</p>
   </div>
   <div class="controls">
-    <div id="selection-info"><span id="count">0</span> counties selected</div>
+    <div id="selection-info">
+      <span class="nc" id="nc-count">0</span> NC &nbsp;
+      <span class="sc" id="sc-count">0</span> SC
+    </div>
     <button id="clear-btn">Clear</button>
     <button id="download-btn" disabled>Download GeoJSON</button>
   </div>
@@ -143,88 +174,113 @@
   <h3>Selected Counties</h3>
   <ul id="county-tags"></ul>
 </div>
+<div id="legend">
+  <div><span class="swatch nc"></span> North Carolina</div>
+  <div><span class="swatch sc"></span> South Carolina</div>
+</div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Turf.js/6.5.0/turf.min.js"></script>
 <script>
-const selected = new Set();
-const map = L.map('map', { zoomControl: true, attributionControl: false });
-map.fitBounds([[33.7, -84.4], [36.6, -75.3]]);
+const selected = new Map(); // name -> 'NC' | 'SC'
 
-function getStyle(feature) {
-  const sel = selected.has(feature.properties.County);
-  return {
+const map = L.map('map', { zoomControl: true, attributionControl: false });
+map.fitBounds([[32.0, -84.4], [36.6, -75.3]]);
+
+function getStyle(feature, state) {
+  const sel = selected.has(feature.properties.County + '|' + state);
+  if (state === 'NC') return {
     fillColor: sel ? '#30bf76' : '#c2ddd0',
     fillOpacity: sel ? 0.45 : 0.3,
     color: sel ? '#229957' : '#7aaa90',
     weight: sel ? 2 : 1,
   };
+  return {
+    fillColor: sel ? '#5ba4cf' : '#c5dff0',
+    fillOpacity: sel ? 0.45 : 0.3,
+    color: sel ? '#3a7fb5' : '#7aaac8',
+    weight: sel ? 2 : 1,
+  };
 }
 
 function updateUI() {
-  const count = selected.size;
-  document.getElementById('count').textContent = count;
-  document.getElementById('download-btn').disabled = count === 0;
+  const ncCount = [...selected.values()].filter(s => s === 'NC').length;
+  const scCount = [...selected.values()].filter(s => s === 'SC').length;
+  const total = ncCount + scCount;
+  document.getElementById('nc-count').textContent = ncCount;
+  document.getElementById('sc-count').textContent = scCount;
+  document.getElementById('download-btn').disabled = total === 0;
   const list = document.getElementById('selected-list');
-  list.style.display = count > 0 ? 'block' : 'none';
+  list.style.display = total > 0 ? 'block' : 'none';
   document.getElementById('county-tags').innerHTML =
-    [...selected].sort().map(c => '<li>' + c + '</li>').join('');
+    [...selected.entries()].sort((a,b) => a[0].localeCompare(b[0])).map(([key, state]) => {
+      const name = key.split('|')[0];
+      return '<li class="' + state.toLowerCase() + '">' + name + ' <small>(' + state + ')</small></li>';
+    }).join('');
 }
 
-let geojsonLayer;
-let geojsonData;
+let ncData, scData;
+let ncLayer, scLayer;
 
-function initMap(data) {
-  geojsonData = data;
-  document.getElementById('loading').remove();
-
-  function onEachFeature(feature, layer) {
-    const name = feature.properties.County;
-    layer.bindTooltip(name, { className: 'county-tooltip', sticky: true, offset: [10, 0] });
-
-    layer.on('click', () => {
-      selected.has(name) ? selected.delete(name) : selected.add(name);
-      layer.setStyle(getStyle(feature));
-      updateUI();
-    });
-
-    layer.on('mouseover', function() {
-      if (!selected.has(name)) layer.setStyle({ fillOpacity: 0.55, fillColor: '#9dcbb5' });
-    });
-
-    layer.on('mouseout', function() {
-      layer.setStyle(getStyle(feature));
-    });
-  }
-
-  geojsonLayer = L.geoJSON(data, { style: getStyle, onEachFeature }).addTo(map);
+function initLayer(data, state) {
+  return L.geoJSON(data, {
+    style: f => getStyle(f, state),
+    onEachFeature: (feature, layer) => {
+      const name = feature.properties.County;
+      const key = name + '|' + state;
+      layer.bindTooltip(name + ' <small>(' + state + ')</small>', {
+        className: 'county-tooltip', sticky: true, offset: [10, 0]
+      });
+      layer.on('click', () => {
+        selected.has(key) ? selected.delete(key) : selected.set(key, state);
+        layer.setStyle(getStyle(feature, state));
+        updateUI();
+      });
+      layer.on('mouseover', () => {
+        if (!selected.has(key)) {
+          layer.setStyle({ fillOpacity: 0.55, fillColor: state === 'NC' ? '#9dcbb5' : '#8cbfde' });
+        }
+      });
+      layer.on('mouseout', () => layer.setStyle(getStyle(feature, state)));
+    }
+  }).addTo(map);
 }
 
-// Load GeoJSON from repo
+let loaded = 0;
+function onLoaded() {
+  loaded++;
+  if (loaded === 2) document.getElementById('loading').remove();
+}
+
 fetch('nc_counties.geojson')
-  .then(r => {
-    if (!r.ok) throw new Error('Failed to load nc_counties.geojson');
-    return r.json();
-  })
-  .then(initMap)
-  .catch(err => {
-    document.getElementById('loading').textContent = 'Error loading counties: ' + err.message;
-  });
+  .then(r => { if (!r.ok) throw new Error('Failed to load nc_counties.geojson'); return r.json(); })
+  .then(data => { ncData = data; ncLayer = initLayer(data, 'NC'); onLoaded(); })
+  .catch(err => { document.getElementById('loading').textContent = 'Error: ' + err.message; });
+
+fetch('sc_counties.geojson')
+  .then(r => { if (!r.ok) throw new Error('Failed to load sc_counties.geojson'); return r.json(); })
+  .then(data => { scData = data; scLayer = initLayer(data, 'SC'); onLoaded(); })
+  .catch(err => { document.getElementById('loading').textContent = 'Error: ' + err.message; });
 
 document.getElementById('clear-btn').addEventListener('click', () => {
   selected.clear();
-  if (geojsonLayer) geojsonLayer.eachLayer(l => l.setStyle(getStyle(l.feature)));
+  if (ncLayer) ncLayer.eachLayer(l => l.setStyle(getStyle(l.feature, 'NC')));
+  if (scLayer) scLayer.eachLayer(l => l.setStyle(getStyle(l.feature, 'SC')));
   updateUI();
 });
 
 document.getElementById('download-btn').addEventListener('click', () => {
-  const features = geojsonData.features.filter(f => selected.has(f.properties.County));
+  const allData = [
+    ...(ncData ? ncData.features.filter(f => selected.has(f.properties.County + '|NC')) : []),
+    ...(scData ? scData.features.filter(f => selected.has(f.properties.County + '|SC')) : [])
+  ];
 
-  // Dissolve all selected counties into a single polygon using Turf.js union
-  let dissolved = features[0];
-  for (let i = 1; i < features.length; i++) {
-    dissolved = turf.union(dissolved, features[i]);
+  let dissolved = allData[0];
+  for (let i = 1; i < allData.length; i++) {
+    dissolved = turf.union(dissolved, allData[i]);
   }
-  dissolved.properties = { counties: [...selected].sort().join(', ') };
+  dissolved.properties = {
+    counties: [...selected.entries()].sort().map(([k,s]) => k.split('|')[0] + ' (' + s + ')').join(', ')
+  };
 
   const output = { type: 'FeatureCollection', features: [dissolved] };
   const blob = new Blob([JSON.stringify(output)], { type: 'application/geo+json' });
@@ -232,7 +288,7 @@ document.getElementById('download-btn').addEventListener('click', () => {
   const a = document.createElement('a');
   const ts = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
   a.href = url;
-  a.download = 'nc_counties_' + ts + '.geojson';
+  a.download = 'counties_' + ts + '.geojson';
   a.click();
   URL.revokeObjectURL(url);
 });
