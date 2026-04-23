@@ -298,7 +298,7 @@ function loadState(state) {
   const overlay = document.getElementById('loading-overlay');
   overlay.textContent = 'Loading ' + state.name + '...';
 
-  fetch(`states/${state.file}.geojson`)
+  fetch(`states/${state.file}.json`)
     .then(r => { if (!r.ok) throw new Error(r.statusText); return r.json(); })
     .then(data => {
       loadedData.set(state.fips, data);
