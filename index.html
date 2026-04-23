@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>boundary-maker-utility</title>
+<title>US County Merger</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
@@ -170,7 +170,7 @@
 <body>
 <header>
   <div class="title-block">
-    <h1>boundary-maker-utility</h1>
+    <h1>US County Merger</h1>
     <p>Select states &rarr; click counties &rarr; download GeoJSON</p>
   </div>
   <div class="controls">
@@ -202,54 +202,54 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Turf.js/6.5.0/turf.min.js"></script>
 <script>
 const STATES = [
-  {name:'Alabama',fips:'01',color:0,file:'alabama'},
-  {name:'Arizona',fips:'04',color:1,file:'arizona'},
-  {name:'Arkansas',fips:'05',color:1,file:'arkansas'},
-  {name:'California',fips:'06',color:0,file:'california'},
-  {name:'Colorado',fips:'08',color:0,file:'colorado'},
-  {name:'Connecticut',fips:'09',color:2,file:'connecticut'},
-  {name:'Delaware',fips:'10',color:3,file:'delaware'},
-  {name:'Florida',fips:'12',color:2,file:'florida'},
-  {name:'Georgia',fips:'13',color:1,file:'georgia'},
-  {name:'Idaho',fips:'16',color:0,file:'idaho'},
-  {name:'Illinois',fips:'17',color:3,file:'illinois'},
-  {name:'Indiana',fips:'18',color:2,file:'indiana'},
-  {name:'Iowa',fips:'19',color:2,file:'iowa'},
-  {name:'Kansas',fips:'20',color:1,file:'kansas'},
-  {name:'Kentucky',fips:'21',color:1,file:'kentucky'},
-  {name:'Louisiana',fips:'22',color:2,file:'louisiana'},
-  {name:'Maine',fips:'23',color:1,file:'maine'},
-  {name:'Maryland',fips:'24',color:0,file:'maryland'},
-  {name:'Massachusetts',fips:'25',color:1,file:'massachusetts'},
-  {name:'Michigan',fips:'26',color:3,file:'michigan'},
-  {name:'Minnesota',fips:'27',color:0,file:'minnesota'},
-  {name:'Mississippi',fips:'28',color:3,file:'mississippi'},
-  {name:'Missouri',fips:'29',color:0,file:'missouri'},
-  {name:'Montana',fips:'30',color:3,file:'montana'},
-  {name:'Nebraska',fips:'31',color:3,file:'nebraska'},
-  {name:'Nevada',fips:'32',color:2,file:'nevada'},
-  {name:'New Hampshire',fips:'33',color:0,file:'new_hampshire'},
+  {name:'Alabama',fips:'01',color:3,file:'alabama'},
+  {name:'Arizona',fips:'04',color:3,file:'arizona'},
+  {name:'Arkansas',fips:'05',color:0,file:'arkansas'},
+  {name:'California',fips:'06',color:2,file:'california'},
+  {name:'Colorado',fips:'08',color:2,file:'colorado'},
+  {name:'Connecticut',fips:'09',color:0,file:'connecticut'},
+  {name:'Delaware',fips:'10',color:2,file:'delaware'},
+  {name:'Florida',fips:'12',color:1,file:'florida'},
+  {name:'Georgia',fips:'13',color:2,file:'georgia'},
+  {name:'Idaho',fips:'16',color:2,file:'idaho'},
+  {name:'Illinois',fips:'17',color:1,file:'illinois'},
+  {name:'Indiana',fips:'18',color:3,file:'indiana'},
+  {name:'Iowa',fips:'19',color:0,file:'iowa'},
+  {name:'Kansas',fips:'20',color:3,file:'kansas'},
+  {name:'Kentucky',fips:'21',color:0,file:'kentucky'},
+  {name:'Louisiana',fips:'22',color:3,file:'louisiana'},
+  {name:'Maine',fips:'23',color:2,file:'maine'},
+  {name:'Maryland',fips:'24',color:3,file:'maryland'},
+  {name:'Massachusetts',fips:'25',color:2,file:'massachusetts'},
+  {name:'Michigan',fips:'26',color:0,file:'michigan'},
+  {name:'Minnesota',fips:'27',color:1,file:'minnesota'},
+  {name:'Mississippi',fips:'28',color:2,file:'mississippi'},
+  {name:'Missouri',fips:'29',color:2,file:'missouri'},
+  {name:'Montana',fips:'30',color:1,file:'montana'},
+  {name:'Nebraska',fips:'31',color:1,file:'nebraska'},
+  {name:'Nevada',fips:'32',color:0,file:'nevada'},
+  {name:'New Hampshire',fips:'33',color:1,file:'new_hampshire'},
   {name:'New Jersey',fips:'34',color:2,file:'new_jersey'},
-  {name:'New Mexico',fips:'35',color:3,file:'new_mexico'},
-  {name:'New York',fips:'36',color:0,file:'new_york'},
+  {name:'New Mexico',fips:'35',color:0,file:'new_mexico'},
+  {name:'New York',fips:'36',color:3,file:'new_york'},
   {name:'North Carolina',fips:'37',color:0,file:'north_carolina'},
   {name:'North Dakota',fips:'38',color:2,file:'north_dakota'},
-  {name:'Ohio',fips:'39',color:0,file:'ohio'},
-  {name:'Oklahoma',fips:'40',color:2,file:'oklahoma'},
-  {name:'Oregon',fips:'41',color:1,file:'oregon'},
-  {name:'Pennsylvania',fips:'42',color:1,file:'pennsylvania'},
-  {name:'Rhode Island',fips:'44',color:0,file:'rhode_island'},
-  {name:'South Carolina',fips:'45',color:2,file:'south_carolina'},
-  {name:'South Dakota',fips:'46',color:1,file:'south_dakota'},
-  {name:'Tennessee',fips:'47',color:2,file:'tennessee'},
-  {name:'Texas',fips:'48',color:0,file:'texas'},
-  {name:'Utah',fips:'49',color:2,file:'utah'},
-  {name:'Vermont',fips:'50',color:1,file:'vermont'},
+  {name:'Ohio',fips:'39',color:2,file:'ohio'},
+  {name:'Oklahoma',fips:'40',color:1,file:'oklahoma'},
+  {name:'Oregon',fips:'41',color:3,file:'oregon'},
+  {name:'Pennsylvania',fips:'42',color:0,file:'pennsylvania'},
+  {name:'Rhode Island',fips:'44',color:3,file:'rhode_island'},
+  {name:'South Carolina',fips:'45',color:3,file:'south_carolina'},
+  {name:'South Dakota',fips:'46',color:3,file:'south_dakota'},
+  {name:'Tennessee',fips:'47',color:1,file:'tennessee'},
+  {name:'Texas',fips:'48',color:2,file:'texas'},
+  {name:'Utah',fips:'49',color:1,file:'utah'},
+  {name:'Vermont',fips:'50',color:0,file:'vermont'},
   {name:'Virginia',fips:'51',color:2,file:'virginia'},
-  {name:'Washington',fips:'53',color:2,file:'washington'},
-  {name:'West Virginia',fips:'54',color:3,file:'west_virginia'},
-  {name:'Wisconsin',fips:'55',color:1,file:'wisconsin'},
-  {name:'Wyoming',fips:'56',color:2,file:'wyoming'}
+  {name:'Washington',fips:'53',color:1,file:'washington'},
+  {name:'West Virginia',fips:'54',color:1,file:'west_virginia'},
+  {name:'Wisconsin',fips:'55',color:3,file:'wisconsin'},
+  {name:'Wyoming',fips:'56',color:0,file:'wyoming'}
 ];
 
 const COLORS = [
