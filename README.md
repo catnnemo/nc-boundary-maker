@@ -8,7 +8,7 @@ A small Python script that merges a subset of NC counties into a single dissolve
 - [shapely](https://shapely.readthedocs.io/)
 
 ```bash
-pip install shapely
+pip install shapely --break-system-packages
 ```
 
 ## Usage
