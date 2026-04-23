@@ -56,8 +56,18 @@ def main():
         print("Make sure nc_counties.geojson is in the same directory as this script.")
         sys.exit(1)
 
-    with open(GEOJSON_PATH) as f:
-        data = json.load(f)
+    if GEOJSON_PATH.stat().st_size == 0:
+        print(f"Error: {GEOJSON_PATH} is empty.")
+        print("Make sure you downloaded the full nc_counties.geojson file from the repo.")
+        sys.exit(1)
+
+    try:
+        with open(GEOJSON_PATH) as f:
+            data = json.load(f)
+    except json.JSONDecodeError as e:
+        print(f"Error: nc_counties.geojson is not valid JSON ({e})")
+        print("The file may be corrupted or only partially downloaded. Try re-downloading it.")
+        sys.exit(1)
 
     if data.get("type") != "FeatureCollection":
         print("Error: nc_counties.geojson must be a GeoJSON FeatureCollection")

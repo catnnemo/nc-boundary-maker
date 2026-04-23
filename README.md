@@ -13,9 +13,9 @@ pip install shapely
 
 ## Usage
 
-```bash
-python merge_counties.py counties.txt
-```
+1. Clone the repository
+2. run ```bash python merge_counties.py counties.txt ``` in the cloned directory
+
 
 The output is automatically named `output_YYYYMMDD_HHMMSS.geojson` and written to the current directory.
 
