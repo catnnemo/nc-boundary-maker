@@ -2,7 +2,10 @@
 
 A small Python script that merges a subset of NC counties into a single dissolved polygon, using the included `nc_counties.geojson` boundary file. Made with Meshmapper admins in mind
 
-## Requirements
+## Web App
+Go to https://catnnemo.github.io/nc-boundary-maker/
+
+## Requirements for Running Locally
 
 - Python 3.7+
 - [shapely](https://shapely.readthedocs.io/)
