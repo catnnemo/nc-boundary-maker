@@ -1,6 +1,6 @@
 # nc-boundary-maker
 
-A small Python script that merges a subset of NC counties into a single dissolved polygon, using the included `nc_counties.geojson` boundary file. Made with Meshmapper admins in mind. Data set is the Census Bureau's 1:500k cartographic boundary file.
+A small Python script that merges a subset of NC counties into a single dissolved polygon, using the included `nc_counties.geojson` boundary file. Made with Meshmapper admins in mind.
 
 ## Web App
 Go to https://catnnemo.github.io/nc-boundary-maker/
