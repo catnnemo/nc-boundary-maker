@@ -109,10 +109,10 @@
   .color-dot {
     width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0;
   }
-  .dot-0 { background: var(--c0); }
-  .dot-1 { background: var(--c1); }
-  .dot-2 { background: var(--c2); }
-  .dot-3 { background: var(--c3); }
+  .dot-0 { background: #1e7a40; }
+  .dot-1 { background: #1f5f8b; }
+  .dot-2 { background: #8b1f1f; }
+  .dot-3 { background: #4e2a8e; }
 
   #map-wrap { flex: 1; position: relative; }
   #map { width: 100%; height: 100%; }
@@ -253,13 +253,13 @@ const STATES = [
 ];
 
 const COLORS = [
-  {fill:'#4db87a', stroke:'#2e8f55', hover:'#7dd4a0', selFill:'rgba(77,184,122,0.45)'},
-  {fill:'#5ba4cf', stroke:'#3a7fb5', hover:'#8cbfde', selFill:'rgba(91,164,207,0.45)'},
-  {fill:'#e07070', stroke:'#b84444', hover:'#eda0a0', selFill:'rgba(224,112,112,0.45)'},
-  {fill:'#9b7fd4', stroke:'#6f4fb5', hover:'#bba8e4', selFill:'rgba(155,127,212,0.45)'},
+  {light:'#a8dfc0', lightStroke:'#6cbd96', dark:'#1e7a40', darkStroke:'#145c2e', hover:'#7dd4a0'},
+  {light:'#a8cfe8', lightStroke:'#6aaad4', dark:'#1f5f8b', darkStroke:'#154570', hover:'#8cbfde'},
+  {light:'#f0aaaa', lightStroke:'#e07070', dark:'#8b1f1f', darkStroke:'#6e1515', hover:'#eda0a0'},
+  {light:'#c9b8e8', lightStroke:'#a888d4', dark:'#4e2a8e', darkStroke:'#3a1e6e', hover:'#bba8e4'},
 ];
 
-const DEFAULT_FILL = {fill:'#d0d8d4', stroke:'#9ab0a8'};
+
 
 const selected = new Map(); // key: "County|StateName" -> color index
 const loadedLayers = new Map(); // fips -> L.geoJSON layer
@@ -272,9 +272,9 @@ map.fitBounds([[24.5, -125], [49.5, -66]]);
 function getStyle(feature, color, isSelected) {
   const c = COLORS[color];
   return {
-    fillColor: isSelected ? c.fill : DEFAULT_FILL.fill,
-    fillOpacity: isSelected ? 0.5 : 0.3,
-    color: isSelected ? c.stroke : DEFAULT_FILL.stroke,
+    fillColor: isSelected ? c.dark : c.light,
+    fillOpacity: isSelected ? 0.7 : 0.5,
+    color: isSelected ? c.darkStroke : c.lightStroke,
     weight: isSelected ? 2 : 0.8,
   };
 }
